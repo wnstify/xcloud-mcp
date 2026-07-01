@@ -40,6 +40,14 @@ function resolveToken(): string | undefined {
   return command ? runHelper(command) : process.env.XCLOUD_API_TOKEN;
 }
 
+/** The base URL carries the bearer token, so it must be https — never send the PAT over cleartext. */
+function httpsBase(base: string): string {
+  if (new URL(base).protocol !== "https:") {
+    throw new Error(`XCLOUD_API_BASE must be an https: URL — refusing to send the token over cleartext (got ${base}).`);
+  }
+  return base;
+}
+
 export function loadConfig(): Config {
   const token = resolveToken();
   if (!token) {
@@ -49,7 +57,7 @@ export function loadConfig(): Config {
   }
   return {
     token,
-    baseUrl: process.env.XCLOUD_API_BASE ?? DEFAULT_BASE_URL,
+    baseUrl: httpsBase(process.env.XCLOUD_API_BASE ?? DEFAULT_BASE_URL),
     destructive: {
       enabled: flag("XCLOUD_ENABLE_DESTRUCTIVE"),
       noConfirm: flag("XCLOUD_DESTRUCTIVE_NO_CONFIRM"),

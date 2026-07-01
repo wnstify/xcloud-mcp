@@ -24,6 +24,8 @@ Some xCloud responses carry sensitive material. Before any result reaches the mo
 
 There's one deliberate exception. The `magic_login` tool exists to hand you a login URL, so that URL is returned to you on purpose. But it carries a login token and works for about ten minutes, so treat it like a password: use it, don't paste it somewhere it'll be stored, and know that the server itself never logs it.
 
+Because that URL is a password-equivalent that reaches the model, `magic_login` is a bit hotter than the other write tools: a prompt-injected agent could mint one and surface it to the transcript or another connected tool. Two things bound the risk — the URL expires in ~10 minutes, and the tool needs a write-capable token to run at all (a read-only PAT can't call it). If you don't want the capability available, don't grant it: mint a token without it, or use a read-only token.
+
 ## No shell-out, structurally
 
 The most common class of MCP vulnerability is a tool that builds a shell command out of model-supplied input. This server doesn't have one. Every tool talks to the xCloud REST API over HTTPS. There is no code path from a tool to a shell, so command injection isn't mitigated, it's absent. The single place the server runs an external command is the optional credential-helper at startup, which runs one fixed command you configured, directly rather than through a shell, and is never reachable from a tool or from anything the model says.
@@ -58,6 +60,13 @@ npm audit signatures
 ```
 
 and npm verifies that provenance at install time.
+
+The matching GitHub Release attaches the same evidence as files — the tarball, its SPDX SBOM, the SLSA provenance bundle (`*.intoto.jsonl`), the SBOM attestation (`attestation.json`) and a `SHA256SUMS` manifest. You can verify those directly:
+
+```sh
+gh attestation verify <tarball> --repo wnstify/xcloud-mcp   # provenance + SBOM attestation
+sha256sum -c SHA256SUMS                                     # artifact integrity
+```
 
 ## Reporting a vulnerability
 

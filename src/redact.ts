@@ -2,8 +2,26 @@
 
 const PLACEHOLDER = "[REDACTED]";
 
-/** Keys whose values are credential material and must never reach the model (API-GUIDE §21). */
-const isSecretKey = (key: string) => key === "ssh_keypairs" || key === "password" || key.endsWith("_password");
+/** Credential-bearing key names — matched case-insensitively (API-GUIDE §21, plus common defence-in-depth). */
+const SECRET_KEYS = new Set([
+  "ssh_keypairs",
+  "password",
+  "token",
+  "access_token",
+  "refresh_token",
+  "auth_token",
+  "secret",
+  "client_secret",
+  "api_key",
+  "private_key",
+  "keypair",
+]);
+
+/** Keys whose values are credential material and must never reach the model. */
+const isSecretKey = (key: string) => {
+  const k = key.toLowerCase();
+  return SECRET_KEYS.has(k) || k.endsWith("_password");
+};
 
 /**
  * Recursively strip known secret-bearing fields from any tool result before it returns

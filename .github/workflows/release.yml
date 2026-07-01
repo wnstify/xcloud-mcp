@@ -17,13 +17,20 @@
 # GitHub Actions (repo = wnstify/xcloud-mcp, workflow = release.yml).
 #
 # Publishing is tag-only: a real publish happens only on a `refs/tags/v*` push
-# to the canonical public repo. Do NOT broaden the trigger to branches or PRs.
+# to the canonical public repo. Do NOT broaden the push trigger to branches or PRs.
+#
+# DRY RUN: `workflow_dispatch` runs the same job with every side-effecting step
+# (attest, npm publish, GitHub Release) skipped — a rehearsal that still exercises
+# verify-tag, the pinned toolchain, the full gate, pack and SBOM. Dispatch it
+# against a *signed* throwaway tag (name NOT matching `v*`, so the push trigger
+# stays inert) to prove the signature gate before burning a real version tag.
 name: release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -34,24 +41,50 @@ jobs:
     # Only the canonical public repo may publish; forks and mirrors are inert.
     if: github.repository == 'wnstify/xcloud-mcp'
     permissions:
-      contents: read
+      contents: write # create the GitHub Release for the tag
       id-token: write # OIDC token that signs the provenance and SBOM attestations
       attestations: write # store the SBOM attestation bound to the published tarball
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
+          fetch-tags: true # ensure the annotated tag object is present for verify-tag
+
+      # Fail closed on a tag that is not signed by the trusted release key. Runs
+      # before any build/publish, so an unsigned or wrongly-signed tag never ships.
+      # Trust anchor: .github/allowed_signers (the wn-workstation-bitwarden key).
+      - name: Verify the release tag is signed by the trusted key
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          git config gpg.format ssh
+          git config gpg.ssh.allowedSignersFile "$PWD/.github/allowed_signers"
+          git verify-tag "$GITHUB_REF_NAME"
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      # Node 24 ships npm 11.3.x; trusted publishing needs >= 11.5.1.
-      - name: Ensure npm supports trusted publishing
-        run: npm install -g npm@latest
+      # Node 24 LTS ships npm 11.3.x; trusted publishing needs >= 11.5.1. Pin to an
+      # exact npm and verify the tarball's SHA-512 against a hardcoded digest before
+      # installing, so a compromised registry can't swap the release toolchain.
+      - name: Install a pinned, integrity-verified npm
+        run: |
+          set -euo pipefail
+          expected="sha512-T67M4L5wNm0cZ7EBLErcEkY1SmzEW/WJ+SADBzsFUY1UdAPfFHXFQtZ6SEXiK0+vzXysCvAsepbMaBTwnrAD+w=="
+          curl -fsSL -o npm.tgz https://registry.npmjs.org/npm/-/npm-11.18.0.tgz
+          actual="sha512-$(openssl dgst -sha512 -binary npm.tgz | base64 -w0)"
+          if [ "$actual" != "$expected" ]; then
+            echo "npm 11.18.0 tarball integrity mismatch: $actual" >&2
+            exit 1
+          fi
+          npm install -g ./npm.tgz
+          rm npm.tgz
+          test "$(npm -v)" = "11.18.0"
 
       - name: Assert the tag matches package.json version
+        if: github.event_name == 'push'
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
@@ -70,10 +103,9 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-      - run: npm run build
-
       # Pack the exact tarball we publish, so the SBOM attestation and the npm
-      # provenance both bind to the same bytes.
+      # provenance both bind to the same bytes. `npm pack` runs the prepack hook
+      # (npm run build), so dist/ is compiled here — no separate build step.
       - name: Pack the release tarball
         id: pack
         run: |
@@ -84,13 +116,65 @@ jobs:
         run: npm sbom --sbom-format spdx --sbom-type application > sbom.spdx.json
 
       - name: Attest the SBOM against the tarball
+        id: sbom-attest
+        if: github.event_name == 'push'
         uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34 # v3
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
           sbom-path: sbom.spdx.json
 
+      # SLSA build provenance for the exact tarball — a Sigstore-signed, Rekor-logged
+      # attestation bundle we also attach to the GitHub Release as `.intoto.jsonl`.
+      - name: Attest build provenance for the tarball
+        id: provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ steps.pack.outputs.tarball }}
+
       # Publish the packed tarball. Tokenless via OIDC trusted publishing — npm
       # mints the SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged)
       # automatically, so no NODE_AUTH_TOKEN and no --provenance flag are needed.
       - name: Publish to npm with provenance
+        if: github.event_name == 'push'
         run: npm publish "${{ steps.pack.outputs.tarball }}" --access public
+
+      # Cut the GitHub Release for this tag with notes lifted from CHANGELOG.md,
+      # attaching the exact published tarball, its SPDX SBOM, the SLSA provenance
+      # and SBOM attestation bundles, and a SHA256SUMS manifest over all of them.
+      - name: Create the GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom-attest.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { grab = 1; next }
+            grab && /^## \[/ { exit }
+            grab { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "no CHANGELOG section for $version" >&2
+            exit 1
+          fi
+
+          # Materialize the attestation bundles under stable names for the release.
+          cp "$PROVENANCE_BUNDLE" "${TARBALL}.intoto.jsonl"
+          cp "$SBOM_BUNDLE" attestation.json
+
+          # Checksums over every primary artifact (basenames only; all live in cwd).
+          sha256sum "$TARBALL" sbom.spdx.json "${TARBALL}.intoto.jsonl" attestation.json > SHA256SUMS
+
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --notes-file release-notes.md \
+            "$TARBALL" \
+            sbom.spdx.json \
+            "${TARBALL}.intoto.jsonl" \
+            attestation.json \
+            SHA256SUMS

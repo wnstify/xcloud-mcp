@@ -2,7 +2,7 @@
 
 This roadmap describes what `xcloud-mcp` intends to do, and explicitly not do, over roughly the next year. It is a statement of direction, not a commitment to dates; priorities shift with maintainer capacity and security needs. Live planning happens in [GitHub issues](https://github.com/wnstify/xcloud-mcp/issues); this file is the higher-level summary.
 
-The current stable release is `v1.0.1`. See [CHANGELOG.md](CHANGELOG.md) for shipped work and [GOVERNANCE.md](GOVERNANCE.md) for how decisions are made.
+The current stable release is `v1.0.2`. See [CHANGELOG.md](CHANGELOG.md) for shipped work and [GOVERNANCE.md](GOVERNANCE.md) for how decisions are made.
 
 ## Under consideration (not committed)
 
