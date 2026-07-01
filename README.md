@@ -74,3 +74,11 @@ The full catalog, with every tool's classification and required token scope, is 
 ## Status
 
 v1, built and tested locally. Not yet published to npm; install from source as shown above. When it is published, releases will carry signed build provenance you can verify (see [SECURITY.md](SECURITY.md)).
+
+## About xCloud
+
+[xCloud](https://xcloud.host/) is a third-party server and site management platform. This is an independent, community-built MCP server for the public xCloud REST API — it is **not** an official xCloud product and is not affiliated with or endorsed by xCloud. "xCloud" and related marks belong to their respective owner.
+
+## License
+
+[MIT](LICENSE) © Simon Gajdosik, Webnestify s.r.o.
