@@ -1,0 +1,12 @@
+# Codecov status targets aligned with the enforced 80% coverage floor (npm test).
+# Coverage is the release gate in CI; Codecov here is a reporting mirror, not a
+# stricter bar than the project's stated policy.
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
