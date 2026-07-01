@@ -17,13 +17,20 @@
 # GitHub Actions (repo = wnstify/xcloud-mcp, workflow = release.yml).
 #
 # Publishing is tag-only: a real publish happens only on a `refs/tags/v*` push
-# to the canonical public repo. Do NOT broaden the trigger to branches or PRs.
+# to the canonical public repo. Do NOT broaden the push trigger to branches or PRs.
+#
+# DRY RUN: `workflow_dispatch` runs the same job with every side-effecting step
+# (attest, npm publish, GitHub Release) skipped — a rehearsal that still exercises
+# verify-tag, the pinned toolchain, the full gate, pack and SBOM. Dispatch it
+# against a *signed* throwaway tag (name NOT matching `v*`, so the push trigger
+# stays inert) to prove the signature gate before burning a real version tag.
 name: release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -47,6 +54,7 @@ jobs:
       # before any build/publish, so an unsigned or wrongly-signed tag never ships.
       # Trust anchor: .github/allowed_signers (the wn-workstation-bitwarden key).
       - name: Verify the release tag is signed by the trusted key
+        if: github.ref_type == 'tag'
         run: |
           set -euo pipefail
           git config gpg.format ssh
@@ -76,6 +84,7 @@ jobs:
           test "$(npm -v)" = "11.18.0"
 
       - name: Assert the tag matches package.json version
+        if: github.event_name == 'push'
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
@@ -108,6 +117,7 @@ jobs:
         run: npm sbom --sbom-format spdx --sbom-type application > sbom.spdx.json
 
       - name: Attest the SBOM against the tarball
+        if: github.event_name == 'push'
         uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34 # v3
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
@@ -117,11 +127,13 @@ jobs:
       # mints the SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged)
       # automatically, so no NODE_AUTH_TOKEN and no --provenance flag are needed.
       - name: Publish to npm with provenance
+        if: github.event_name == 'push'
         run: npm publish "${{ steps.pack.outputs.tarball }}" --access public
 
       # Cut the GitHub Release for this tag with notes lifted from CHANGELOG.md,
       # attaching the exact published tarball and its SPDX SBOM.
       - name: Create the GitHub Release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
