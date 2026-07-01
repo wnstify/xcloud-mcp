@@ -16,7 +16,7 @@
 # SBOM is also generated and attested against the tarball (verify with
 # `gh attestation verify <tarball>`).
 #
-# AFTER v1.0.0 is live: configure the trusted publisher (npmjs.com -> package
+# AFTER v1.0.1 is live: configure the trusted publisher (npmjs.com -> package
 # Settings -> Trusted Publisher -> GitHub Actions; repo = wnstify/xcloud-mcp,
 # workflow = release.yml), then remove NODE_AUTH_TOKEN and delete the NPM_TOKEN
 # secret to publish tokenless (provenance stays automatic under OIDC).
@@ -82,8 +82,8 @@ jobs:
       - name: Pack the release tarball
         id: pack
         run: |
-          npm pack
-          echo "tarball=$(ls *.tgz)" >> "$GITHUB_OUTPUT"
+          TARBALL=$(npm pack)
+          echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
 
       - name: Generate SPDX SBOM
         run: npm sbom --sbom-format spdx --sbom-type application > sbom.spdx.json

@@ -1,8 +1,16 @@
 {
   "name": "@webnestify/xcloud-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local MCP server for managing your own xCloud servers and sites from your AI agent.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wnstify/xcloud-mcp.git"
+  },
+  "homepage": "https://github.com/wnstify/xcloud-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/wnstify/xcloud-mcp/issues"
+  },
   "type": "module",
   "bin": {
     "xcloud-mcp": "dist/index.js"

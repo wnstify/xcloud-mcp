@@ -56,7 +56,7 @@ export function buildServer(
   xcloud: XCloudClient,
   destructive: DestructiveConfig = { enabled: false, noConfirm: false },
 ): McpServer {
-  const server = new McpServer({ name: "xcloud-mcp", version: "1.0.0" });
+  const server = new McpServer({ name: "xcloud-mcp", version: "1.0.1" });
 
   server.registerTool(
     "list_servers",
