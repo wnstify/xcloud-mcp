@@ -78,8 +78,9 @@ The assessment focuses on the critical paths: model-supplied tool arguments, tok
 | Secret leakage from xCloud responses | Keys/passwords shown to the model. | Central redaction net strips secret fields from every result; `magic_login`'s URL is the one intentional, documented exception. |
 | Malicious or tampered release | Consumers install attacker code. | Tag-gated publish with OIDC provenance (SLSA/Sigstore/Rekor), verifiable via `npm audit signatures`. |
 | Vulnerable dependency | Known vulnerability reaches users. | Exact-pinned dependencies, Dependabot, and `npm audit` as a release-blocking gate; CodeQL and Scorecard in CI. |
+| Credential accidentally committed | A secret leaks into git history. | GitHub secret scanning with push protection is enabled on the repository: push protection blocks a commit containing a detected secret, and scanning alerts on any that reach the repo. |
 
-Security assessment is continuous: CI runs lint, typecheck, tests with the coverage floor, `npm audit`, CodeQL, and Scorecard; releases require passing that gate plus provenance; repository rules protect `dev`, `main`, and release tags with required checks and signatures.
+Security assessment is continuous: CI runs lint, typecheck, tests with the coverage floor, `npm audit`, CodeQL, and Scorecard; GitHub secret scanning with push protection guards against committed credentials; releases require passing that gate plus provenance; repository rules protect `dev`, `main`, and release tags with required checks and signatures.
 
 ## Maintainer Responsibilities
 
@@ -99,4 +100,4 @@ Before granting write, admin, or repository-settings access, the maintainer revi
 
 The project has more than one human maintainer with Write access (the `@wnstify/webnestify-dev` team). Independent human approval is required: branch-protection rules on `dev` and `main` require one approving review from the team, self-approval does not count, and the same rules apply to the owner's own pull requests. Merges into `dev` and `main` are restricted to the repository owner, so another maintainer can approve but not merge.
 
-Controls are independent two-person review, public pull requests, **signed commits and signed release tags**, required CI (lint, typecheck, test with coverage floor, audit), CodeQL, Scorecard, protected `dev`/`main`, immutable protected release tags, provenance-signed releases, and public issue/security reporting.
+Controls are independent two-person review, public pull requests, **signed commits and signed release tags**, required CI (lint, typecheck, test with coverage floor, audit), CodeQL, Scorecard, secret scanning with push protection, protected `dev`/`main`, immutable protected release tags, provenance-signed releases, and public issue/security reporting.
