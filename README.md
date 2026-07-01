@@ -1,5 +1,7 @@
 # xCloud MCP
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wnstify/xcloud-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/wnstify/xcloud-mcp)
+
 A local [MCP](https://modelcontextprotocol.io) server that lets you manage your own xCloud servers and sites from inside your AI agent: Claude Code, Claude Desktop, Codex CLI, or any other MCP-speaking harness.
 
 You give it one xCloud Personal Access Token. It calls the xCloud REST API on your behalf and hands your agent a curated set of tools: list your fleet, check a server's health, read a site's logs, trigger a backup, apply WordPress updates, purge a cache, and so on. It runs on your own machine over stdio. Nothing about your account leaves your box except the calls you already make to xCloud.
