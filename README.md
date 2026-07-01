@@ -23,8 +23,10 @@ You give it one xCloud Personal Access Token. It calls the xCloud REST API on yo
 **Claude Code** — one command (`-s user` installs for every project; drop it to scope to the current project only):
 
 ```sh
-claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.1
+claude mcp add xcloud -s user --env XCLOUD_API_TOKEN='your-xcloud-pat' -- npx -y @webnestify/xcloud-mcp@1.0.1
 ```
+
+Keep the single quotes around the token — xCloud PATs contain a `|`, which an unquoted shell would read as a pipe.
 
 **Other harnesses** (Claude Desktop, Codex CLI, and anything else that speaks MCP) — add the server to your agent's MCP config and set your token. Most use an `mcpServers` block like this:
 

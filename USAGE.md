@@ -71,10 +71,10 @@ Whatever the source, the rule is the same: the command must print the token, and
 ### Claude Code (one line, once published)
 
 ```sh
-claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.1
+claude mcp add xcloud -s user --env XCLOUD_API_TOKEN='your-xcloud-pat' -- npx -y @webnestify/xcloud-mcp@1.0.1
 ```
 
-`-s user` installs it for every project; drop it to add only to the current one.
+`-s user` installs it for every project; drop it to add only to the current one. Keep the single quotes around the token — xCloud PATs contain a `|`, which an unquoted shell would treat as a pipe (the command would fail with `missing required argument 'commandOrUrl'`).
 
 The forms below go in your harness's `mcpServers` block (Claude Desktop's `claude_desktop_config.json`, Claude Code's MCP config, and so on; check your harness's docs for the exact file).
 
