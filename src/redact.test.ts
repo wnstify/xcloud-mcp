@@ -1,6 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { installTokenRedaction } from "./redact.ts";
+import { installTokenRedaction, redactSecrets } from "./redact.ts";
+
+test("redactSecrets strips credential-named keys (token, secret, api_key, private_key…), case-insensitive", () => {
+  const out = redactSecrets({
+    name: "blog",
+    token: "t0ken",
+    Access_Token: "a1",
+    refresh_token: "r1",
+    client_secret: "c1",
+    API_KEY: "k1",
+    private_key: "-----BEGIN-----",
+    nested: { auth_token: "n1", keeper: "keep" },
+  }) as Record<string, unknown>;
+
+  assert.deepEqual(Object.keys(out).sort(), ["name", "nested"]);
+  assert.equal(out.name, "blog");
+  assert.deepEqual(out.nested, { keeper: "keep" });
+});
 
 test("installed redaction scrubs the PAT from everything written to stdout and stderr", () => {
   const token = "pat-secret-egress-9f3";
