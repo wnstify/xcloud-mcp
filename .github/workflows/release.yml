@@ -8,18 +8,13 @@
 #
 # Requirement: `id-token: write` — the OIDC token that signs the SLSA provenance.
 #
-# BOOTSTRAP (current): the first release publishes with the NPM_TOKEN secret plus
-# `--provenance`, because a trusted publisher cannot be configured until the package
-# exists on npm. Provenance is still full and verifiable — SLSA in-toto statement,
-# Sigstore keyless signature, Rekor transparency-log entry, "provenance" badge on
-# the package page — verified by consumers with `npm audit signatures`. An SPDX
-# SBOM is also generated and attested against the tarball (verify with
-# `gh attestation verify <tarball>`).
-#
-# AFTER v1.0.1 is live: configure the trusted publisher (npmjs.com -> package
-# Settings -> Trusted Publisher -> GitHub Actions; repo = wnstify/xcloud-mcp,
-# workflow = release.yml), then remove NODE_AUTH_TOKEN and delete the NPM_TOKEN
-# secret to publish tokenless (provenance stays automatic under OIDC).
+# TOKENLESS: publishing uses npm trusted publishing (OIDC), so there is NO
+# NPM_TOKEN. Provenance is automatic — SLSA in-toto statement, Sigstore keyless
+# signature, Rekor transparency-log entry, "provenance" badge on the package page
+# — verified by consumers with `npm audit signatures`. An SPDX SBOM is also
+# generated and attested against the tarball (verify with `gh attestation verify`).
+# Trusted publisher config: npmjs.com -> package Settings -> Trusted Publisher ->
+# GitHub Actions (repo = wnstify/xcloud-mcp, workflow = release.yml).
 #
 # Publishing is tag-only: a real publish happens only on a `refs/tags/v*` push
 # to the canonical public repo. Do NOT broaden the trigger to branches or PRs.
@@ -94,11 +89,8 @@ jobs:
           subject-path: ${{ steps.pack.outputs.tarball }}
           sbom-path: sbom.spdx.json
 
-      # Publish the packed tarball with SLSA provenance (in-toto statement,
-      # Sigstore-signed, Rekor-logged). Bootstrap uses the NPM_TOKEN secret;
-      # --provenance is explicit because we are token-authed. Once trusted
-      # publishing is configured, drop the env + flag and publish tokenless.
+      # Publish the packed tarball. Tokenless via OIDC trusted publishing — npm
+      # mints the SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged)
+      # automatically, so no NODE_AUTH_TOKEN and no --provenance flag are needed.
       - name: Publish to npm with provenance
-        run: npm publish "${{ steps.pack.outputs.tarball }}" --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "${{ steps.pack.outputs.tarball }}" --access public
