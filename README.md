@@ -20,7 +20,7 @@ You give it one xCloud Personal Access Token. It calls the xCloud REST API on yo
 > [!CAUTION]
 > Keeping the token out of a plaintext config file (pulling it from macOS Keychain, Windows Credential Manager, gopass, 1Password, or Vault) is a one-line change covered in [USAGE.md](USAGE.md).
 
-**Claude Code** — one command (add `-s user` to install it for every project):
+**Claude Code** — one command (`-s user` installs for every project; drop it to scope to the current project only):
 
 ```sh
 claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.0
