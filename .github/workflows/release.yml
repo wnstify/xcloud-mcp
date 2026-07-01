@@ -117,11 +117,21 @@ jobs:
         run: npm sbom --sbom-format spdx --sbom-type application > sbom.spdx.json
 
       - name: Attest the SBOM against the tarball
+        id: sbom-attest
         if: github.event_name == 'push'
         uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34 # v3
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
           sbom-path: sbom.spdx.json
+
+      # SLSA build provenance for the exact tarball — a Sigstore-signed, Rekor-logged
+      # attestation bundle we also attach to the GitHub Release as `.intoto.jsonl`.
+      - name: Attest build provenance for the tarball
+        id: provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ steps.pack.outputs.tarball }}
 
       # Publish the packed tarball. Tokenless via OIDC trusted publishing — npm
       # mints the SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged)
@@ -131,11 +141,15 @@ jobs:
         run: npm publish "${{ steps.pack.outputs.tarball }}" --access public
 
       # Cut the GitHub Release for this tag with notes lifted from CHANGELOG.md,
-      # attaching the exact published tarball and its SPDX SBOM.
+      # attaching the exact published tarball, its SPDX SBOM, the SLSA provenance
+      # and SBOM attestation bundles, and a SHA256SUMS manifest over all of them.
       - name: Create the GitHub Release
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom-attest.outputs.bundle-path }}
         run: |
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
@@ -148,9 +162,20 @@ jobs:
             echo "no CHANGELOG section for $version" >&2
             exit 1
           fi
+
+          # Materialize the attestation bundles under stable names for the release.
+          cp "$PROVENANCE_BUNDLE" "${TARBALL}.intoto.jsonl"
+          cp "$SBOM_BUNDLE" attestation.json
+
+          # Checksums over every primary artifact (basenames only; all live in cwd).
+          sha256sum "$TARBALL" sbom.spdx.json "${TARBALL}.intoto.jsonl" attestation.json > SHA256SUMS
+
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
             --verify-tag \
             --notes-file release-notes.md \
-            "${{ steps.pack.outputs.tarball }}" \
-            sbom.spdx.json
+            "$TARBALL" \
+            sbom.spdx.json \
+            "${TARBALL}.intoto.jsonl" \
+            attestation.json \
+            SHA256SUMS
