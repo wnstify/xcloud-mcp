@@ -1,0 +1,70 @@
+# Release: tag-gated npm publish with provenance via OIDC trusted publishing.
+#
+# Verified releases the npm-native way — no hand-rolled cosign/Ed25519/SBOM.
+# `npm publish` under a GitHub Actions OIDC identity automatically mints a SLSA
+# provenance attestation (Sigstore-signed, recorded in Rekor) and surfaces the
+# "provenance" badge on the npm package page. Consumers verify with
+# `npm audit signatures`.
+#
+# Requirements (npm docs): npm CLI >= 11.5.1, Node >= 22.14.0, `id-token: write`.
+# NO NPM_TOKEN — trusted publishing uses the OIDC token. One-time setup on
+# npmjs.com: package Settings -> Trusted Publisher -> GitHub Actions, with
+# repo = wnstify/xcloud-mcp and workflow filename = release.yml.
+#
+# Publishing is tag-only: a real publish happens only on a `refs/tags/v*` push
+# to the canonical public repo. Do NOT broaden the trigger to branches or PRs.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Only the canonical public repo may publish; forks and mirrors are inert.
+    if: github.repository == 'wnstify/xcloud-mcp'
+    permissions:
+      contents: read
+      id-token: write # OIDC token for provenance + trusted publishing
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # Node 24 ships npm 11.3.x; trusted publishing needs >= 11.5.1.
+      - name: Ensure npm supports trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Assert the tag matches package.json version
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json version $pkg" >&2
+            exit 1
+          fi
+          echo "version OK: v$pkg"
+
+      - run: npm ci
+
+      # Full gate — a single failure stops the release.
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: node --test "src/**/*.test.ts"
+      - run: npm audit --audit-level=low
+
+      - run: npm run build
+
+      # Provenance is automatic under OIDC trusted publishing (no --provenance flag).
+      - run: npm publish --access public
