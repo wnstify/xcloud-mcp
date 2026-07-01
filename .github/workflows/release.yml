@@ -12,7 +12,9 @@
 # `--provenance`, because a trusted publisher cannot be configured until the package
 # exists on npm. Provenance is still full and verifiable — SLSA in-toto statement,
 # Sigstore keyless signature, Rekor transparency-log entry, "provenance" badge on
-# the package page — verified by consumers with `npm audit signatures`.
+# the package page — verified by consumers with `npm audit signatures`. An SPDX
+# SBOM is also generated and attested against the tarball (verify with
+# `gh attestation verify <tarball>`).
 #
 # AFTER v1.0.0 is live: configure the trusted publisher (npmjs.com -> package
 # Settings -> Trusted Publisher -> GitHub Actions; repo = wnstify/xcloud-mcp,
@@ -38,7 +40,8 @@ jobs:
     if: github.repository == 'wnstify/xcloud-mcp'
     permissions:
       contents: read
-      id-token: write # OIDC token for provenance + trusted publishing
+      id-token: write # OIDC token that signs the provenance and SBOM attestations
+      attestations: write # store the SBOM attestation bound to the published tarball
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -74,10 +77,28 @@ jobs:
 
       - run: npm run build
 
-      # Publish with SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged).
-      # Bootstrap uses the NPM_TOKEN secret; --provenance is explicit because we are
-      # token-authed. Once trusted publishing is configured, drop the env + flag.
+      # Pack the exact tarball we publish, so the SBOM attestation and the npm
+      # provenance both bind to the same bytes.
+      - name: Pack the release tarball
+        id: pack
+        run: |
+          npm pack
+          echo "tarball=$(ls *.tgz)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SPDX SBOM
+        run: npm sbom --sbom-format spdx --sbom-type application > sbom.spdx.json
+
+      - name: Attest the SBOM against the tarball
+        uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34 # v3
+        with:
+          subject-path: ${{ steps.pack.outputs.tarball }}
+          sbom-path: sbom.spdx.json
+
+      # Publish the packed tarball with SLSA provenance (in-toto statement,
+      # Sigstore-signed, Rekor-logged). Bootstrap uses the NPM_TOKEN secret;
+      # --provenance is explicit because we are token-authed. Once trusted
+      # publishing is configured, drop the env + flag and publish tokenless.
       - name: Publish to npm with provenance
-        run: npm publish --provenance --access public
+        run: npm publish "${{ steps.pack.outputs.tarball }}" --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
