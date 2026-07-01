@@ -64,23 +64,19 @@ function xcloudError(status: number): Error {
 export class XCloudClient {
   #token: string;
   #baseUrl: string;
+  #timeoutMs: number;
 
-  constructor(token: string, baseUrl: string) {
+  constructor(token: string, baseUrl: string, timeoutMs = 30_000) {
     this.#token = token;
     this.#baseUrl = baseUrl;
+    this.#timeoutMs = timeoutMs;
   }
 
   /** The single external boundary: fetch, react to 429, unwrap the envelope, return the whole thing. */
   async #send(path: string, init?: RequestInit): Promise<Envelope<unknown>> {
     for (let attempt = 0; ; attempt++) {
-      const res = await fetch(`${this.#baseUrl}${path}`, {
-        ...init,
-        headers: {
-          Authorization: `Bearer ${this.#token}`,
-          Accept: "application/json",
-          ...init?.headers,
-        },
-      });
+      // Fresh per-attempt deadline so a hung or slow endpoint can't stall the tool call forever.
+      const res = await this.#fetch(path, init);
       if (res.status === 429 && attempt < MAX_RETRIES) {
         await sleep(retryAfterMs(res, attempt));
         continue;
@@ -89,6 +85,26 @@ export class XCloudClient {
       const body = (await res.json()) as Envelope<unknown>;
       if (!body.success) throw new Error(body.message);
       return body;
+    }
+  }
+
+  /** fetch with a per-request timeout; a blown deadline surfaces as a clean, token-free error. */
+  async #fetch(path: string, init?: RequestInit): Promise<Response> {
+    try {
+      return await fetch(`${this.#baseUrl}${path}`, {
+        ...init,
+        signal: AbortSignal.timeout(this.#timeoutMs),
+        headers: {
+          Authorization: `Bearer ${this.#token}`,
+          Accept: "application/json",
+          ...init?.headers,
+        },
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "TimeoutError") {
+        throw new Error(`xCloud request timed out after ${this.#timeoutMs}ms; try again shortly.`, { cause: err });
+      }
+      throw err;
     }
   }
 
