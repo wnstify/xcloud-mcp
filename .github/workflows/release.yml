@@ -6,10 +6,18 @@
 # "provenance" badge on the npm package page. Consumers verify with
 # `npm audit signatures`.
 #
-# Requirements (npm docs): npm CLI >= 11.5.1, Node >= 22.14.0, `id-token: write`.
-# NO NPM_TOKEN — trusted publishing uses the OIDC token. One-time setup on
-# npmjs.com: package Settings -> Trusted Publisher -> GitHub Actions, with
-# repo = wnstify/xcloud-mcp and workflow filename = release.yml.
+# Requirement: `id-token: write` — the OIDC token that signs the SLSA provenance.
+#
+# BOOTSTRAP (current): the first release publishes with the NPM_TOKEN secret plus
+# `--provenance`, because a trusted publisher cannot be configured until the package
+# exists on npm. Provenance is still full and verifiable — SLSA in-toto statement,
+# Sigstore keyless signature, Rekor transparency-log entry, "provenance" badge on
+# the package page — verified by consumers with `npm audit signatures`.
+#
+# AFTER v1.0.0 is live: configure the trusted publisher (npmjs.com -> package
+# Settings -> Trusted Publisher -> GitHub Actions; repo = wnstify/xcloud-mcp,
+# workflow = release.yml), then remove NODE_AUTH_TOKEN and delete the NPM_TOKEN
+# secret to publish tokenless (provenance stays automatic under OIDC).
 #
 # Publishing is tag-only: a real publish happens only on a `refs/tags/v*` push
 # to the canonical public repo. Do NOT broaden the trigger to branches or PRs.
@@ -66,5 +74,10 @@ jobs:
 
       - run: npm run build
 
-      # Provenance is automatic under OIDC trusted publishing (no --provenance flag).
-      - run: npm publish --access public
+      # Publish with SLSA provenance (in-toto statement, Sigstore-signed, Rekor-logged).
+      # Bootstrap uses the NPM_TOKEN secret; --provenance is explicit because we are
+      # token-authed. Once trusted publishing is configured, drop the env + flag.
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
