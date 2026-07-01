@@ -68,7 +68,15 @@ Whatever the source, the rule is the same: the command must print the token, and
 
 ## Adding the server to your agent
 
-Both forms below go in your harness's `mcpServers` block (Claude Desktop's `claude_desktop_config.json`, Claude Code's MCP config, and so on; check your harness's docs for the exact file).
+### Claude Code (one line, once published)
+
+```sh
+claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.0
+```
+
+`-s user` installs it for every project; drop it to add only to the current one.
+
+The forms below go in your harness's `mcpServers` block (Claude Desktop's `claude_desktop_config.json`, Claude Code's MCP config, and so on; check your harness's docs for the exact file).
 
 ### Pinned npx (once published)
 
