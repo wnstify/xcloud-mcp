@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-07-01
+
+Hardening and packaging fixes from a security review. No tool behavior changes.
+
+### Security
+
+- **Reject a non-https `XCLOUD_API_BASE`.** The base URL is where the bearer
+  token is sent; the server now parses it and refuses to start unless it is an
+  `https:` URL, so a mistaken `http://` override can't send the PAT over
+  cleartext.
+- **Broader result redaction.** The central egress net now strips common
+  credential-named fields (`token`, `access_token`, `refresh_token`,
+  `auth_token`, `secret`, `client_secret`, `api_key`, `private_key`, `keypair`)
+  case-insensitively, in addition to `ssh_keypairs` and `*_password`.
+- **Documented the `magic_login` prompt-injection risk** in
+  [SECURITY.md](SECURITY.md): its login URL is a password-equivalent that
+  reaches the model, bounded by the ~10-minute expiry and the write-scoped-token
+  requirement.
+
+### Changed
+
+- **Per-request API timeout.** Outbound xCloud calls now use a 30-second
+  deadline (fresh per retry), so a hung or slow endpoint can't stall a tool call
+  indefinitely; a blown deadline surfaces as a clean, token-free error.
+
+### Fixed
+
+- **`prepack` build guard** so a manual `npm pack`/`npm publish` can't ship a
+  tarball without `dist/`.
+- **Ship `SECURITY.md`, `USAGE.md`, and `FEATURES.md` in the package**, which
+  README links to but were previously excluded from the tarball.
+
 ## [1.0.1] - 2026-07-01
 
 Initial public release. A local, stdio-only MCP server that lets an AI agent
@@ -45,4 +77,5 @@ with your Personal Access Token as the real safety boundary.
 - No bundled secret store and no remote/multi-tenant mode by design — the
   server runs locally over stdio only.
 
+[1.0.2]: https://github.com/wnstify/xcloud-mcp/releases/tag/v1.0.2
 [1.0.1]: https://github.com/wnstify/xcloud-mcp/releases/tag/v1.0.1
