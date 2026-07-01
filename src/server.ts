@@ -101,7 +101,7 @@ export function buildServer(
     },
     async ({ server: serverUuid, site, range }) => {
       // Exactly one parent, validated at the boundary before any HTTP call.
-      if (!serverUuid === !site) {
+      if (Boolean(serverUuid) === Boolean(site)) {
         return text("Provide exactly one of `server` or `site` — the resource to read history for.", true);
       }
       return json(await xcloud.getMetricsHistory({ server: serverUuid, site }, range));
@@ -262,7 +262,7 @@ export function buildServer(
     },
     async ({ server: serverUuid, site }) => {
       // Exactly one parent, validated at the boundary before any HTTP call.
-      if (!serverUuid === !site) {
+      if (Boolean(serverUuid) === Boolean(site)) {
         return text("Provide exactly one of `server` or `site` — the cron jobs' parent.", true);
       }
       return json(await xcloud.listCronJobs({ server: serverUuid, site }));
@@ -279,7 +279,7 @@ export function buildServer(
     },
     async ({ server: serverUuid, site, cron_job }) => {
       // Exactly one parent, validated at the boundary before any HTTP call.
-      if (!serverUuid === !site) {
+      if (Boolean(serverUuid) === Boolean(site)) {
         return text("Provide exactly one of `server` or `site` — the cron job's parent.", true);
       }
       return json(await xcloud.getCronJobOutput({ server: serverUuid, site }, cron_job));
@@ -502,7 +502,7 @@ export function buildServer(
       },
       async ({ server: serverUuid, site, cron_job }) => {
         // Exactly one parent, validated at the boundary before any consent prompt or HTTP call.
-        if (!serverUuid === !site) {
+        if (Boolean(serverUuid) === Boolean(site)) {
           return text("Provide exactly one of `server` or `site` — the cron job's parent.", true);
         }
         const where = serverUuid ? `server ${serverUuid}` : `site ${site}`;
