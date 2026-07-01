@@ -17,6 +17,9 @@ You give it one xCloud Personal Access Token. It calls the xCloud REST API on yo
 
 ## Quick start
 
+> [!CAUTION]
+> Keeping the token out of a plaintext config file (pulling it from macOS Keychain, Windows Credential Manager, gopass, 1Password, or Vault) is a one-line change covered in [USAGE.md](USAGE.md).
+
 **Claude Code** — one command (add `-s user` to install it for every project):
 
 ```sh
@@ -58,8 +61,6 @@ Pinning the version (`@1.0.0`) means you always run a known build rather than wh
 > ```
 
 Restart your agent, and the xCloud tools appear. Ask it to run `whoami` to confirm which account and team your token is scoped to.
-
-Keeping the token out of a plaintext config file (pulling it from macOS Keychain, Windows Credential Manager, gopass, 1Password, or Vault) is a one-line change covered in [USAGE.md](USAGE.md).
 
 ## What you can do
 
