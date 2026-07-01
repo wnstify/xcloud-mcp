@@ -41,6 +41,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
+          fetch-tags: true # ensure the annotated tag object is present for verify-tag
 
       # Fail closed on a tag that is not signed by the trusted release key. Runs
       # before any build/publish, so an unsigned or wrongly-signed tag never ships.
