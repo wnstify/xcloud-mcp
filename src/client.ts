@@ -36,7 +36,9 @@ function retryAfterMs(res: Response, attempt: number): number {
   const header = res.headers.get("retry-after");
   const seconds = header === null ? NaN : Number(header);
   const ms = Number.isFinite(seconds) ? seconds * 1000 : 100 * 2 ** attempt;
-  return Math.min(ms, 2000);
+  // Cap at 30s so a large server-set Retry-After is honoured, not silently
+  // clamped away; the exponential fallback stays well under this.
+  return Math.min(ms, 30_000);
 }
 
 /** Map xCloud's non-REST status conventions to clear, distinct, token-free tool errors. */
