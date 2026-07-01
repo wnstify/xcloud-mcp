@@ -34,7 +34,7 @@ jobs:
     # Only the canonical public repo may publish; forks and mirrors are inert.
     if: github.repository == 'wnstify/xcloud-mcp'
     permissions:
-      contents: read
+      contents: write # create the GitHub Release for the tag
       id-token: write # OIDC token that signs the provenance and SBOM attestations
       attestations: write # store the SBOM attestation bound to the published tarball
     steps:
@@ -94,3 +94,27 @@ jobs:
       # automatically, so no NODE_AUTH_TOKEN and no --provenance flag are needed.
       - name: Publish to npm with provenance
         run: npm publish "${{ steps.pack.outputs.tarball }}" --access public
+
+      # Cut the GitHub Release for this tag with notes lifted from CHANGELOG.md,
+      # attaching the exact published tarball and its SPDX SBOM.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { grab = 1; next }
+            grab && /^## \[/ { exit }
+            grab { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "no CHANGELOG section for $version" >&2
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --notes-file release-notes.md \
+            "${{ steps.pack.outputs.tarball }}" \
+            sbom.spdx.json
