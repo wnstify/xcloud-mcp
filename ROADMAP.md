@@ -2,11 +2,11 @@
 
 This roadmap describes what `xcloud-mcp` intends to do, and explicitly not do, over roughly the next year. It is a statement of direction, not a commitment to dates; priorities shift with maintainer capacity and security needs. Live planning happens in [GitHub issues](https://github.com/wnstify/xcloud-mcp/issues); this file is the higher-level summary.
 
-The current stable release is `v1.0.0`. See [CHANGELOG.md](CHANGELOG.md) for shipped work and [GOVERNANCE.md](GOVERNANCE.md) for how decisions are made.
+The current stable release is `v1.0.1`. See [CHANGELOG.md](CHANGELOG.md) for shipped work and [GOVERNANCE.md](GOVERNANCE.md) for how decisions are made.
 
 ## Under consideration (not committed)
 
-Candidate tools left out of v1.0.0, to be added case by case where they earn their place in the curated set (see the "Not built in this version" section of [FEATURES.md](FEATURES.md)):
+Candidate tools left out of v1.0.1, to be added case by case where they earn their place in the curated set (see the "Not built in this version" section of [FEATURES.md](FEATURES.md)):
 
 - **fail2ban ban / unban** — act on a banned IP, not just list them.
 - **PHP management** — set the default version and opcache controls.

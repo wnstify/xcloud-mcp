@@ -71,7 +71,7 @@ Whatever the source, the rule is the same: the command must print the token, and
 ### Claude Code (one line, once published)
 
 ```sh
-claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.0
+claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @webnestify/xcloud-mcp@1.0.1
 ```
 
 `-s user` installs it for every project; drop it to add only to the current one.
@@ -85,7 +85,7 @@ The forms below go in your harness's `mcpServers` block (Claude Desktop's `claud
   "mcpServers": {
     "xcloud": {
       "command": "npx",
-      "args": ["-y", "@webnestify/xcloud-mcp@1.0.0"],
+      "args": ["-y", "@webnestify/xcloud-mcp@1.0.1"],
       "env": { "XCLOUD_API_TOKEN": "your-xcloud-pat" }
     }
   }
