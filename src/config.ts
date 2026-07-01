@@ -16,7 +16,8 @@ const flag = (name: string): boolean => process.env[name] === "true";
 /**
  * Run the operator-set credential-helper once and return its stdout as the PAT.
  * ADR-0001's single sanctioned shell-out: `execFile` (no shell → no injection), args
- * split off the command string. stdin is ignored (our stdin is the JSON-RPC pipe) and
+ * split off the command string on whitespace — so the executable path and its arguments
+ * must not contain spaces (documented in .env.example). stdin is ignored (our stdin is the JSON-RPC pipe) and
  * stderr is captured, never inherited, so a noisy helper cannot spill onto our stderr.
  * On failure we surface only the exit code / spawn error — never the command, its stdout
  * or its stderr, any of which could carry the very secret we are fetching.
