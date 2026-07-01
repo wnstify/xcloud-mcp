@@ -58,11 +58,11 @@ jobs:
 
       - run: npm ci
 
-      # Full gate — a single failure stops the release.
+      # Full gate — a single failure stops the release. `npm test` enforces the
+      # 80% coverage floor (same as CI) and runs the pretest `npm audit` gate.
       - run: npm run typecheck
       - run: npm run lint
-      - run: node --test "src/**/*.test.ts"
-      - run: npm audit --audit-level=low
+      - run: npm test
 
       - run: npm run build
 
