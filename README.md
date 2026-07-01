@@ -42,7 +42,7 @@ claude mcp add xcloud -s user --env XCLOUD_API_TOKEN=your-xcloud-pat -- npx -y @
 
 Pinning the version (`@1.0.1`) means you always run a known build rather than whatever is newest.
 
-> The package is not published to npm yet. Until it is, run it from a local checkout instead. Clone the repository, then build it:
+> Prefer to run from source (for development or auditing)? Clone the repository, build it, and point your harness at the build:
 >
 > ```sh
 > npm install && npm run build
@@ -80,7 +80,7 @@ The full catalog, with every tool's classification and required token scope, is 
 
 ## Status
 
-v1, built and tested locally. Not yet published to npm; install from source as shown above. When it is published, releases will carry signed build provenance you can verify (see [SECURITY.md](SECURITY.md)).
+v1.0.1, published to npm — install via `npx` as shown in the quick start. Every release carries signed build provenance and an attested SPDX SBOM you can verify (see [SECURITY.md](SECURITY.md)).
 
 ## About xCloud
 
