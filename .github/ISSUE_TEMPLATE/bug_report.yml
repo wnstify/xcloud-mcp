@@ -50,7 +50,7 @@ body:
     attributes:
       label: xcloud-mcp version
       description: The package version you ran (e.g. via `npx @webnestify/xcloud-mcp@<version>`).
-      placeholder: 1.0.1
+      placeholder: 1.0.2
     validations:
       required: true
   - type: input

@@ -1,6 +1,6 @@
 {
   "name": "@webnestify/xcloud-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Local MCP server for managing your own xCloud servers and sites from your AI agent.",
   "license": "MIT",
   "repository": {
@@ -16,12 +16,16 @@
     "xcloud-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "SECURITY.md",
+    "USAGE.md",
+    "FEATURES.md"
   ],
   "engines": {
     "node": ">=24"
   },
   "scripts": {
+    "prepack": "npm run build",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

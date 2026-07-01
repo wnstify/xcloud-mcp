@@ -1,5 +1,7 @@
 # xCloud MCP
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wnstify/xcloud-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/wnstify/xcloud-mcp)
+
 A local [MCP](https://modelcontextprotocol.io) server that lets you manage your own xCloud servers and sites from inside your AI agent: Claude Code, Claude Desktop, Codex CLI, or any other MCP-speaking harness.
 
 You give it one xCloud Personal Access Token. It calls the xCloud REST API on your behalf and hands your agent a curated set of tools: list your fleet, check a server's health, read a site's logs, trigger a backup, apply WordPress updates, purge a cache, and so on. It runs on your own machine over stdio. Nothing about your account leaves your box except the calls you already make to xCloud.
@@ -23,7 +25,7 @@ You give it one xCloud Personal Access Token. It calls the xCloud REST API on yo
 **Claude Code** — one command (`-s user` installs for every project; drop it to scope to the current project only):
 
 ```sh
-claude mcp add xcloud -s user --env XCLOUD_API_TOKEN='your-xcloud-pat' -- npx -y @webnestify/xcloud-mcp@1.0.1
+claude mcp add xcloud -s user --env XCLOUD_API_TOKEN='your-xcloud-pat' -- npx -y @webnestify/xcloud-mcp@1.0.2
 ```
 
 Keep the single quotes around the token — xCloud PATs contain a `|`, which an unquoted shell would read as a pipe.
@@ -35,14 +37,14 @@ Keep the single quotes around the token — xCloud PATs contain a `|`, which an 
   "mcpServers": {
     "xcloud": {
       "command": "npx",
-      "args": ["-y", "@webnestify/xcloud-mcp@1.0.1"],
+      "args": ["-y", "@webnestify/xcloud-mcp@1.0.2"],
       "env": { "XCLOUD_API_TOKEN": "your-xcloud-pat" }
     }
   }
 }
 ```
 
-Pinning the version (`@1.0.1`) means you always run a known build rather than whatever is newest.
+Pinning the version (`@1.0.2`) means you always run a known build rather than whatever is newest.
 
 > Prefer to run from source (for development or auditing)? Clone the repository, build it, and point your harness at the build:
 >
@@ -82,7 +84,7 @@ The full catalog, with every tool's classification and required token scope, is 
 
 ## Status
 
-v1.0.1, published to npm — install via `npx` as shown in the quick start. Every release carries signed build provenance and an attested SPDX SBOM you can verify (see [SECURITY.md](SECURITY.md)).
+v1.0.2, published to npm — install via `npx` as shown in the quick start. Every release carries signed build provenance and an attested SPDX SBOM you can verify (see [SECURITY.md](SECURITY.md)).
 
 ## About xCloud
 

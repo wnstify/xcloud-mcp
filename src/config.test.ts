@@ -76,6 +76,18 @@ test("destructive opt-in flags default off, and only the exact string 'true' tur
   });
 });
 
+test("XCLOUD_API_BASE: a non-https base URL is refused, so the token can't go over cleartext", () => {
+  withEnv({ XCLOUD_API_TOKEN: "t", XCLOUD_API_BASE: "http://app.xcloud.host/api/v1" }, () => {
+    assert.throws(loadConfig, /https:/);
+  });
+});
+
+test("XCLOUD_API_BASE: a custom https base is accepted (self-hosted/staging still works)", () => {
+  withEnv({ XCLOUD_API_TOKEN: "t", XCLOUD_API_BASE: "https://staging.example.test/api/v1" }, () => {
+    assert.equal(loadConfig().baseUrl, "https://staging.example.test/api/v1");
+  });
+});
+
 test("XCLOUD_TOKEN_CMD: a failing helper errors clearly, without leaking its output", () => {
   // A helper that spills a secret to stdout+stderr then exits non-zero. execFileSync's own
   // error appends the child's stderr and echoes the command line — none of that may surface.
