@@ -61,6 +61,13 @@ npm audit signatures
 
 and npm verifies that provenance at install time.
 
+The matching GitHub Release attaches the same evidence as files — the tarball, its SPDX SBOM, the SLSA provenance bundle (`*.intoto.jsonl`), the SBOM attestation (`attestation.json`) and a `SHA256SUMS` manifest. You can verify those directly:
+
+```sh
+gh attestation verify <tarball> --repo wnstify/xcloud-mcp   # provenance + SBOM attestation
+sha256sum -c SHA256SUMS                                     # artifact integrity
+```
+
 ## Reporting a vulnerability
 
 If you find a security issue, please report it privately rather than opening a public issue: email **dev@webnestify.cloud** with the details and steps to reproduce. We'll acknowledge and work a fix, and credit you if you'd like. Please give us a reasonable window to release before any public disclosure.

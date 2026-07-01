@@ -36,6 +36,17 @@ Hardening and packaging fixes from a security review. No tool behavior changes.
 - **Ship `SECURITY.md`, `USAGE.md`, and `FEATURES.md` in the package**, which
   README links to but were previously excluded from the tarball.
 
+### Release engineering
+
+- **Richer, verifiable GitHub Releases.** Each release is now created
+  automatically and carries the published tarball, its SPDX SBOM, a SLSA build
+  provenance bundle (`*.intoto.jsonl`), the SBOM attestation (`attestation.json`)
+  and a `SHA256SUMS` manifest — all keyless via OIDC and verifiable with
+  `gh attestation verify` and `sha256sum -c`.
+- **Hardened release pipeline.** The publish workflow now verifies the release
+  tag is signed by the trusted key before doing anything, pins npm to an
+  integrity-checked version, and offers a `workflow_dispatch` dry run.
+
 ## [1.0.1] - 2026-07-01
 
 Initial public release. A local, stdio-only MCP server that lets an AI agent
