@@ -92,7 +92,7 @@ The forms below go in your harness's `mcpServers` block (Claude Desktop's `claud
 }
 ```
 
-### From a local checkout (today)
+### From a local checkout (for development)
 
 Build it first with `npm install && npm run build`, then point your harness at the built entrypoint:
 
