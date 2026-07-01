@@ -103,10 +103,9 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-      - run: npm run build
-
       # Pack the exact tarball we publish, so the SBOM attestation and the npm
-      # provenance both bind to the same bytes.
+      # provenance both bind to the same bytes. `npm pack` runs the prepack hook
+      # (npm run build), so dist/ is compiled here — no separate build step.
       - name: Pack the release tarball
         id: pack
         run: |
