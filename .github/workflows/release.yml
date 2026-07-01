@@ -42,14 +42,37 @@ jobs:
         with:
           persist-credentials: false
 
+      # Fail closed on a tag that is not signed by the trusted release key. Runs
+      # before any build/publish, so an unsigned or wrongly-signed tag never ships.
+      # Trust anchor: .github/allowed_signers (the wn-workstation-bitwarden key).
+      - name: Verify the release tag is signed by the trusted key
+        run: |
+          set -euo pipefail
+          git config gpg.format ssh
+          git config gpg.ssh.allowedSignersFile "$PWD/.github/allowed_signers"
+          git verify-tag "$GITHUB_REF_NAME"
+
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      # Node 24 ships npm 11.3.x; trusted publishing needs >= 11.5.1.
-      - name: Ensure npm supports trusted publishing
-        run: npm install -g npm@latest
+      # Node 24 LTS ships npm 11.3.x; trusted publishing needs >= 11.5.1. Pin to an
+      # exact npm and verify the tarball's SHA-512 against a hardcoded digest before
+      # installing, so a compromised registry can't swap the release toolchain.
+      - name: Install a pinned, integrity-verified npm
+        run: |
+          set -euo pipefail
+          expected="sha512-T67M4L5wNm0cZ7EBLErcEkY1SmzEW/WJ+SADBzsFUY1UdAPfFHXFQtZ6SEXiK0+vzXysCvAsepbMaBTwnrAD+w=="
+          curl -fsSL -o npm.tgz https://registry.npmjs.org/npm/-/npm-11.18.0.tgz
+          actual="sha512-$(openssl dgst -sha512 -binary npm.tgz | base64 -w0)"
+          if [ "$actual" != "$expected" ]; then
+            echo "npm 11.18.0 tarball integrity mismatch: $actual" >&2
+            exit 1
+          fi
+          npm install -g ./npm.tgz
+          rm npm.tgz
+          test "$(npm -v)" = "11.18.0"
 
       - name: Assert the tag matches package.json version
         run: |
