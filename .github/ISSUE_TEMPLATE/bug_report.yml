@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a reproducible problem in xcloud-mcp.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug.
+
+        **Do not include secrets, tokens, passwords, or unredacted `.env` contents.**
+        xcloud-mcp redacts your PAT in its own output and logs; please double-check
+        anything you paste here and remove credentials before submitting.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed all secrets, tokens, and credentials from this report.
+          required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and the actual behavior you observed.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps, including the MCP tool call(s) you made.
+      placeholder: |
+        1. Call tool `list_sites` with ...
+        2. ...
+        3. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen instead.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: xcloud-mcp version
+      description: The package version you ran (e.g. via `npx @webnestify/xcloud-mcp@<version>`).
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      description: Output of `node --version` (xcloud-mcp requires Node >= 24).
+      placeholder: v24.13.2
+    validations:
+      required: true
+  - type: input
+    id: mcp-client
+    attributes:
+      label: MCP client
+      description: The agent/host you connected from, and its version.
+      placeholder: Claude Code 1.x
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant tool output or logs
+      description: Paste the relevant output or logs. Confirm there are no secrets.
+      render: text
+    validations:
+      required: false

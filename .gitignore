@@ -1,0 +1,24 @@
+# Node / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Env / secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Logs (incl. local API training/process logs with real IPs/UUIDs)
+*.log
+xcloud-training.log
+
+# OS / editor cruft
+.DS_Store
+
+# Agent tooling / local context
+.claude/
+.codex/
+CONTEXT.md
+CI.md
