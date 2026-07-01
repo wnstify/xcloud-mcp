@@ -16,7 +16,10 @@
     "xcloud-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "SECURITY.md",
+    "USAGE.md",
+    "FEATURES.md"
   ],
   "engines": {
     "node": ">=24"
