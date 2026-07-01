@@ -8,7 +8,7 @@ Everything the server needs comes from a handful of environment variables set in
 | --- | --- | --- |
 | `XCLOUD_API_TOKEN` | Yes* | Your xCloud Personal Access Token. |
 | `XCLOUD_TOKEN_CMD` | No | A command that prints your token to stdout. Set this instead of `XCLOUD_API_TOKEN` to fetch the token from your own secret store. Takes precedence when both are set. |
-| `XCLOUD_API_BASE` | No | Override the xCloud API base URL. Defaults to `https://app.xcloud.host/api/v1`. |
+| `XCLOUD_API_BASE` | No | Override the xCloud API base URL. Defaults to `https://app.xcloud.host/api/v1`. This is where your token is sent, so it must be an `https:` URL — the server refuses to start otherwise, rather than risk the PAT over cleartext. |
 | `XCLOUD_ENABLE_DESTRUCTIVE` | No | Set to exactly `true` to expose the destructive tools. Off by default. |
 | `XCLOUD_DESTRUCTIVE_NO_CONFIRM` | No | Set to exactly `true` to let destructive tools run without a confirmation prompt. Only meaningful with the flag above. |
 
